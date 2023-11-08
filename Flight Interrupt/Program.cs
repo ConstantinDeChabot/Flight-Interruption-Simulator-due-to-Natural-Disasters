@@ -92,5 +92,35 @@ namespace Flight_Interrupt
             command.Dispose();
             connection.Close();
         }
+
+        public static void Menu() //UI menu options: run program, update database, exit program
+        {
+
+        }
+
+        public static void VolcanoSearch() //sql search for volcanos to erupt
+        {
+
+        }
+
+        public static void WeatherAPI() //get weather for volcano
+        {
+
+        }
+
+        public static void PlumeCalculator() //calculate plume
+        {
+
+        }
+
+        public static void FlightTrackerAPI() //get flights in interrupt zone
+        {
+
+        }
+
+        public static void EditDatabase() //display database, add record, update record, delete record
+        {
+
+        }
     }
 }
