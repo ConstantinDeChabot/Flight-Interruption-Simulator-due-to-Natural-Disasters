@@ -8,12 +8,13 @@ namespace Flight_Interrupt
 
     class Program
     {
+        
         //initialise APIs
         public static HttpClient client = new HttpClient();
         public static HttpRequestMessage request = new HttpRequestMessage();
 
         static async Task Main(string[] args)
-        {
+        {/*
             //READ API KEYS
             var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
             string[] APIKeys = File.ReadAllLines(path);
@@ -64,7 +65,17 @@ namespace Flight_Interrupt
                 Console.WriteLine(obj.days[0].windspeed);
                 Console.WriteLine(obj.days[0].winddir);
             }
+        */
+            VolcanoSearch();
+        }
 
+        public static void Menu() //UI menu options: run program, update database, exit program
+        {
+
+        }
+
+        public static void VolcanoSearch() //sql search for volcanos to erupt
+        {
             //SQL
             //connect VS to SQL database
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
@@ -76,31 +87,31 @@ namespace Flight_Interrupt
             SqlCeDataReader dataReader; //used to get data specified by query
             string sql = ""; //contains the sql query
 
+            Console.WriteLine("Enter name of volcano");
+            string volcanoName = Console.ReadLine();
+
             //give query, send command and receive data
-            sql = "select VolcanoName, Longitude, Latitude from VolcanoDatabase where country = 'Japan'"; //TEST QUERY (GIVE ALL VOLCANOS FROM JAPAN)
+            sql = "select VolcanoName, Longitude, Latitude from VolcanoDatabase where VolcanoName = '" + volcanoName + "'"; //TEST QUERY (GIVE ALL VOLCANOS FROM JAPAN)
             command = new SqlCeCommand(sql, connection);
             dataReader = command.ExecuteReader();
 
             //ouput
+            bool invalidInput = true;
             while (dataReader.Read()) 
             {
-                Console.WriteLine(dataReader.GetValue(0) + " - " + dataReader.GetValue(1) + ", " + dataReader.GetValue(2));
+                invalidInput = false;
+                Console.WriteLine(dataReader.GetValue(0) + ": " + dataReader.GetValue(2) + "N, " + dataReader.GetValue(1) + "E");
+                Console.WriteLine("all good");
+            }
+            if (invalidInput)
+            {
+                Console.WriteLine("no volcano, there are problems");
             }
 
             //close the objects
             dataReader.Close();
             command.Dispose();
             connection.Close();
-        }
-
-        public static void Menu() //UI menu options: run program, update database, exit program
-        {
-
-        }
-
-        public static void VolcanoSearch() //sql search for volcanos to erupt
-        {
-
         }
 
         public static void WeatherAPI() //get weather for volcano
