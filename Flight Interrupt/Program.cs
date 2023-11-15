@@ -66,12 +66,100 @@ namespace Flight_Interrupt
                 Console.WriteLine(obj.days[0].winddir);
             }
         */
-            VolcanoSearch();
+            Console.WriteLine(" _____ _ _       _     _         ___       _                             _       ____  _           ");
+            Console.WriteLine("|  ___| (_) __ _| |__ | |_      |_ _|_ __ | |_ ___ _ __ _ __ _   _ _ __ | |_    / ___|(_)_ __ ___  ");
+            Console.WriteLine("| |_  | | |/ _` | '_ \\| __|      | || '_ \\| __/ _ \\ '__| '__| | | | '_ \\| __|   \\___ \\| | '_ ` _ \\ ");
+            Console.WriteLine("|  _| | | | (_| | | | | |_       | || | | | ||  __/ |  | |  | |_| | |_) | |_     ___) | | | | | | |");
+            Console.WriteLine("|_|   |_|_|\\__, |_| |_|\\__|     |___|_| |_|\\__\\___|_|  |_|   \\__,_| .__/ \\__|   |____/|_|_| |_| |_|");
+            Console.WriteLine("           |___/                                                  |_|                              ");
+            Console.ReadKey();
+            string[] mainMenuArray = { ">> Run Program   <<", ">> Edit database <<", ">> Exit program  <<" };
+            int mainMenuOption = MenuController(mainMenuArray);
+            Console.WriteLine(mainMenuOption);
+            switch (mainMenuOption)
+            {
+                case 0:
+                    Console.WriteLine("Run program");
+                    VolcanoSearch();
+                    break;
+                case 1:
+                    Console.WriteLine("Edit Database");
+                    EditDatabase();
+                    break;
+                case 2:
+                    Console.WriteLine("Exit Program");
+                    Environment.Exit(0);
+                    break;
+            }
+
         }
 
-        public static void Menu() //UI menu options: run program, update database, exit program
-        {
 
+        static int MenuController(string[] menuArray)
+        {
+            int index = 0;
+            Console.Clear();
+            DisplayMenu(menuArray, index);
+            while (true) //error handling + wait until user enters one of desired options
+            {
+                ConsoleKeyInfo tempkey = Console.ReadKey(true);
+
+                if (tempkey.Key == ConsoleKey.UpArrow)
+                {
+                    index--;
+                }
+                else if (tempkey.Key == ConsoleKey.DownArrow)
+                {
+                    index++;
+                }
+                else if (/*tempkey.Key == ConsoleKey.Spacebar ||*/ tempkey.Key == ConsoleKey.Enter)
+                {
+                    Console.WriteLine(" exit loop, index:" + index);
+                    return index;
+                }
+
+                Console.Clear();
+
+                Console.SetCursorPosition(5, 10);
+                if (index < 0)
+                {
+                    index += menuArray.Length;
+                }
+                else
+                {
+                    index = index % menuArray.Length;
+                }
+
+                DisplayMenu(menuArray, index);
+                Console.SetCursorPosition(0, 11);
+            }
+        }
+
+        static void DisplayMenu(string[] menuArray, int index)
+        {
+            int width = Console.WindowWidth;
+            Console.SetCursorPosition((width / 2) - 2, 5);
+            Console.WriteLine("Menu");
+            Console.WriteLine();
+
+            for (int i = 0; i < menuArray.Length; i++)
+            {
+                Console.SetCursorPosition((Console.WindowWidth - menuArray[i].Length) / 2, 7 + i);
+                if (i == index)
+                {
+                    Console.BackgroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.WriteLine(menuArray[i]);
+                }
+                else
+                {
+                    Console.WriteLine(menuArray[i].Replace('>', ' ').Replace('<', ' '));
+                }
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+
+            Console.WriteLine(index);
         }
 
         public static void VolcanoSearch() //sql search for volcanos to erupt
@@ -105,7 +193,9 @@ namespace Flight_Interrupt
             }
             if (invalidInput)
             {
-                Console.WriteLine("no volcano, there are problems");
+                Console.WriteLine("There seems to be a problem");
+                Console.WriteLine("Press 1 to try again");
+                Console.WriteLine("Press 2 to go to menu");
             }
 
             //close the objects
