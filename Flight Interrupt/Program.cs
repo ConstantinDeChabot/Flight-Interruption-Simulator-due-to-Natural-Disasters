@@ -5,7 +5,6 @@ using System.Text.Json;
 
 namespace Flight_Interrupt
 {
-
     class Program
     {
         
@@ -14,15 +13,15 @@ namespace Flight_Interrupt
         public static HttpRequestMessage request = new HttpRequestMessage();
 
         static async Task Main(string[] args)
-        {/*
+        {
             //READ API KEYS
             var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
             string[] APIKeys = File.ReadAllLines(path);
-            foreach (string line in APIKeys)
+            /* foreach (string line in APIKeys)
             {
                 Console.WriteLine(line);
             }
-
+            
             //Flight Tracker API
 
             var distance = 250;
@@ -47,24 +46,7 @@ namespace Flight_Interrupt
             Console.WriteLine();
 
 
-            //Weather Tracker API
-            client = new HttpClient(); 
-            request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + Longitude + "%2C%" + Latitude +"?unitGroup=metric&include=current&key="+APIKeys[1]+"&contentType=json"),
-            };
-            using (var response = await client.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(body);
-
-                var obj = JsonSerializer.Deserialize<WeatherAPIResponse>(body);
-
-                Console.WriteLine(obj.days[0].windspeed);
-                Console.WriteLine(obj.days[0].winddir);
-            }
+            
         */
             Console.WriteLine(" _____ _ _       _     _         ___       _                             _       ____  _           ");
             Console.WriteLine("|  ___| (_) __ _| |__ | |_      |_ _|_ __ | |_ ___ _ __ _ __ _   _ _ __ | |_    / ___|(_)_ __ ___  ");
@@ -74,7 +56,7 @@ namespace Flight_Interrupt
             Console.WriteLine("           |___/                                                  |_|                              ");
             Console.ReadKey();
             string[] mainMenuArray = { ">> Run Program   <<", ">> Edit database <<", ">> Exit program  <<" };
-            int mainMenuOption = MenuController(mainMenuArray);
+            int mainMenuOption = MenuController("Main Menu", mainMenuArray);
             Console.WriteLine(mainMenuOption);
             switch (mainMenuOption)
             {
@@ -84,7 +66,7 @@ namespace Flight_Interrupt
                     break;
                 case 1:
                     Console.WriteLine("Edit Database");
-                    EditDatabase();
+                    EditDatabaseMenu();
                     break;
                 case 2:
                     Console.WriteLine("Exit Program");
@@ -94,12 +76,13 @@ namespace Flight_Interrupt
 
         }
 
+        //-------------------------------------------------------- Controls All Menus --------------------------------------------------------
 
-        static int MenuController(string[] menuArray)
+        static int MenuController(string menuName, string[] menuArray)
         {
             int index = 0;
             Console.Clear();
-            DisplayMenu(menuArray, index);
+            DisplayMenu(menuName, menuArray, index);
             while (true) //error handling + wait until user enters one of desired options
             {
                 ConsoleKeyInfo tempkey = Console.ReadKey(true);
@@ -130,16 +113,16 @@ namespace Flight_Interrupt
                     index = index % menuArray.Length;
                 }
 
-                DisplayMenu(menuArray, index);
+                DisplayMenu(menuName, menuArray, index);
                 Console.SetCursorPosition(0, 11);
             }
-        }
+        } //controls indexing and formatting of menu
 
-        static void DisplayMenu(string[] menuArray, int index)
+        static void DisplayMenu(string menuName, string[] menuArray, int index)
         {
             int width = Console.WindowWidth;
-            Console.SetCursorPosition((width / 2) - 2, 5);
-            Console.WriteLine("Menu");
+            Console.SetCursorPosition((width / 2) - (menuName.Length / 2), 5);
+            Console.WriteLine(menuName);
             Console.WriteLine();
 
             for (int i = 0; i < menuArray.Length; i++)
@@ -160,7 +143,9 @@ namespace Flight_Interrupt
             }
 
             Console.WriteLine(index);
-        }
+        } //displays the menu and its options to user
+
+        //----------------------------------------------------------- Run Program ------------------------------------------------------------
 
         public static void VolcanoSearch() //sql search for volcanos to erupt
         {
@@ -177,9 +162,11 @@ namespace Flight_Interrupt
 
             Console.WriteLine("Enter name of volcano");
             string volcanoName = Console.ReadLine();
+            double longitude = 0;
+            double latitude = 0;
 
             //give query, send command and receive data
-            sql = "select VolcanoName, Longitude, Latitude from VolcanoDatabase where VolcanoName = '" + volcanoName + "'"; //TEST QUERY (GIVE ALL VOLCANOS FROM JAPAN)
+            sql = "select VolcanoName, Longitude, Latitude from VolcanoDatabase where VolcanoName = '" + volcanoName + "'";
             command = new SqlCeCommand(sql, connection);
             dataReader = command.ExecuteReader();
 
@@ -188,7 +175,9 @@ namespace Flight_Interrupt
             while (dataReader.Read()) 
             {
                 invalidInput = false;
-                Console.WriteLine(dataReader.GetValue(0) + ": " + dataReader.GetValue(2) + "N, " + dataReader.GetValue(1) + "E");
+                longitude = Convert.ToDouble(dataReader.GetValue(1));
+                latitude = Convert.ToDouble(dataReader.GetValue(2));
+                Console.WriteLine(dataReader.GetValue(0) + ": " + latitude + "N, " + longitude + "E");
                 Console.WriteLine("all good");
             }
             if (invalidInput)
@@ -202,11 +191,39 @@ namespace Flight_Interrupt
             dataReader.Close();
             command.Dispose();
             connection.Close();
+
+            Task task = WeatherAPI(longitude, latitude);
         }
 
-        public static void WeatherAPI() //get weather for volcano
+        public static async Task WeatherAPI(double longitude, double latitude) //get weather for volcano
         {
+            //get API Keys
+            var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
+            string[] APIKeys = File.ReadAllLines(path);
 
+            Console.WriteLine("Read Keys");
+            //Weather Tracker API
+            client = new HttpClient(); 
+            request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cheltenham?unitGroup=metric&key=3JDFSMYM4TLCAPYT5UF3WTV2W&contentType=json"),
+            };
+            Console.WriteLine("Made request");
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(body);
+                /*
+                var obj = JsonSerializer.Deserialize<WeatherAPIResponse>(body);
+
+                Console.WriteLine("output values");
+                Console.WriteLine(obj.days[0].windspeed);
+                Console.WriteLine(obj.days[0].winddir);
+                */
+            }
+            Console.WriteLine("done");
         }
 
         public static void PlumeCalculator() //calculate plume
@@ -218,10 +235,35 @@ namespace Flight_Interrupt
         {
 
         }
+        
+        //------------------------------------------------------------- Database -------------------------------------------------------------
 
-        public static void EditDatabase() //display database, add record, update record, delete record
+        public static void EditDatabaseMenu() //display database, add record, update record, delete record
         {
+            Console.Clear();
+            string[] databaseMenuArray = { ">> Display database <<", ">>    Add record    <<", ">>  Update record   <<", ">>  Delete record   <<" };
+            int databaseMenuOption = MenuController("Database Menu", databaseMenuArray);
+            Console.WriteLine(databaseMenuOption);
+            switch (databaseMenuOption)
+            {
+                case 0:
+                    Console.WriteLine("Display database");
+                    break;
+                case 1:
+                    Console.WriteLine("Add record");
+                    break;
+                case 2:
+                    Console.WriteLine("Update record");
+                    break;
+                case 3:
+                    Console.WriteLine("Delete record");
+                    break;
 
+            }
         }
+
+
     }
 }
+//https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cheltenham?unitGroup=metric&key=3JDFSMYM4TLCAPYT5UF3WTV2W&contentType=json
+//https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + longitude + "%2C%" + latitude +"?unitGroup=metric&include=current&key="+ APIKeys[1] +"&contentType=json
