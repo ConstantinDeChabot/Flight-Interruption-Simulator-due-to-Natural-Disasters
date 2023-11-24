@@ -7,13 +7,16 @@ namespace Flight_Interrupt
 {
     class Program
     {
-        
+
+
+
         //initialise APIs
         public static HttpClient client = new HttpClient();
         public static HttpRequestMessage request = new HttpRequestMessage();
 
         static async Task Main(string[] args)
         {
+            Program program = new Program();
             //READ API KEYS
             var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
             string[] APIKeys = File.ReadAllLines(path);
@@ -62,7 +65,7 @@ namespace Flight_Interrupt
             {
                 case 0:
                     Console.WriteLine("Run program");
-                    VolcanoSearch();
+                    await FlightInterruptProgram();
                     break;
                 case 1:
                     Console.WriteLine("Edit Database");
@@ -147,7 +150,16 @@ namespace Flight_Interrupt
 
         //----------------------------------------------------------- Run Program ------------------------------------------------------------
 
-        public static void VolcanoSearch() //sql search for volcanos to erupt
+        public static async Task FlightInterruptProgram()
+        {
+            double[] longLat = await VolcanoSearch();
+
+            Program program = new Program();
+            await program.WeatherAPI(longLat[0], longLat[1]);
+
+
+        }
+        public static async Task<double[]> VolcanoSearch() //sql search for volcanos to erupt
         {
             //SQL
             //connect VS to SQL database
@@ -192,38 +204,53 @@ namespace Flight_Interrupt
             command.Dispose();
             connection.Close();
 
-            Task task = WeatherAPI(longitude, latitude);
+            double[] longLat = { longitude, latitude };
+            return longLat;
         }
 
-        public static async Task WeatherAPI(double longitude, double latitude) //get weather for volcano
+        public async Task<double[]> WeatherAPI(double longitude, double latitude) //get weather for volcano
         {
             //get API Keys
             var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
             string[] APIKeys = File.ReadAllLines(path);
 
-            Console.WriteLine("Read Keys");
             //Weather Tracker API
+            string url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + latitude + "%2C" + longitude + "?unitGroup=metric&include=current&key=" + APIKeys[1] + "&contentType=json";
+            Console.WriteLine(url);
             client = new HttpClient(); 
             request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cheltenham?unitGroup=metric&key=3JDFSMYM4TLCAPYT5UF3WTV2W&contentType=json"),
+                RequestUri = new Uri(url),
             };
-            Console.WriteLine("Made request");
-            using (var response = await client.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(body);
-                /*
-                var obj = JsonSerializer.Deserialize<WeatherAPIResponse>(body);
 
-                Console.WriteLine("output values");
-                Console.WriteLine(obj.days[0].windspeed);
-                Console.WriteLine(obj.days[0].winddir);
-                */
+            double windSpeed = 0;
+            double windDirection = 0;
+
+            var response = await client.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                //Console.WriteLine(body); //write out whole API response
+
+                var obj = JsonSerializer.Deserialize<WeatherAPIResponse>(body); //sort the response
+                
+                Console.WriteLine("Output Values:"); //ouput necessary values
+
+                windSpeed = obj.days[0].windspeed;
+                windDirection = obj.days[0].winddir;
+
+                Console.WriteLine("wind speed: " + windSpeed + " kph");
+                Console.WriteLine("wind dir: " + windDirection + "°");
             }
-            Console.WriteLine("done");
+            else
+            {
+                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
+            }
+            Console.WriteLine("Weather API Complete");
+
+            double[] speedDir = { windSpeed, windDirection };
+            return speedDir;
         }
 
         public static void PlumeCalculator() //calculate plume
@@ -248,6 +275,7 @@ namespace Flight_Interrupt
             {
                 case 0:
                     Console.WriteLine("Display database");
+                    DisplayDatabase();
                     break;
                 case 1:
                     Console.WriteLine("Add record");
@@ -262,8 +290,42 @@ namespace Flight_Interrupt
             }
         }
 
+        public static void DisplayDatabase()
+        {
+            Console.Clear();
+            Console.WriteLine("Display database");
+
+            string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
+            SqlCeConnection connection = new SqlCeConnection(connectionString);
+            connection.Open();
+
+            SqlCeCommand command;
+            SqlCeDataReader dataReader;
+            string sql = "";
+            sql = "select VolcanoName, Longitude, Latitude, Country, Type, VEI from VolcanoDatabase";
+            command = new SqlCeCommand(sql, connection);
+            dataReader = command.ExecuteReader();
+
+            //ouput
+            while (dataReader.Read())
+            {
+                string database = "";
+                database += dataReader.GetValue(0).ToString() + '\t';
+                for (int i = 1; i < 5; i++)
+                {
+                    if (dataReader.GetValue(i).ToString().Length < 8)
+                    {
+                        database += '\t';
+                    }
+                    database += dataReader.GetValue(i).ToString();
+                }
+                Console.WriteLine(database);
+            }
+            Console.WriteLine("all good");
+
+
+        }
+
 
     }
 }
-//https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cheltenham?unitGroup=metric&key=3JDFSMYM4TLCAPYT5UF3WTV2W&contentType=json
-//https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + longitude + "%2C%" + latitude +"?unitGroup=metric&include=current&key="+ APIKeys[1] +"&contentType=json
