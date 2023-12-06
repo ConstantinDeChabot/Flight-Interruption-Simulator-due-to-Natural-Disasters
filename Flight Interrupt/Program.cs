@@ -155,8 +155,9 @@ namespace Flight_Interrupt
             double[] longLat = await VolcanoSearch();
 
             Program program = new Program();
-            await program.WeatherAPI(longLat[0], longLat[1]);
+            double[] speedDir = await program.WeatherAPI(longLat[0], longLat[1]);
 
+            PlumeCalculator(speedDir[0], speedDir[1], longLat[0], longLat[1]);
 
         }
         public static async Task<double[]> VolcanoSearch() //sql search for volcanos to erupt
@@ -189,7 +190,7 @@ namespace Flight_Interrupt
                 invalidInput = false;
                 longitude = Convert.ToDouble(dataReader.GetValue(1));
                 latitude = Convert.ToDouble(dataReader.GetValue(2));
-                Console.WriteLine(dataReader.GetValue(0) + ": " + latitude + "N, " + longitude + "E");
+                Console.WriteLine(dataReader.GetValue(0) + ": " + Math.Round(latitude, 2) + "N, " + Math.Round(longitude,2) + "E");
                 Console.WriteLine("all good");
             }
             if (invalidInput)
@@ -237,10 +238,10 @@ namespace Flight_Interrupt
                 
                 Console.WriteLine("Output Values:"); //ouput necessary values
 
-                windSpeed = obj.days[0].windspeed;
-                windDirection = obj.days[0].winddir;
+                windSpeed = obj.days[0].windspeed / 3.6;
+                windDirection = (obj.days[0].winddir + 180) % 360;
 
-                Console.WriteLine("wind speed: " + windSpeed + " kph");
+                Console.WriteLine("wind speed: " + windSpeed + " mps");
                 Console.WriteLine("wind dir: " + windDirection + "°");
             }
             else
@@ -253,9 +254,153 @@ namespace Flight_Interrupt
             return speedDir;
         }
 
-        public static void PlumeCalculator() //calculate plume
+        public static void PlumeCalculator(double windSpeed, double windDirection, double longitudeDegrees, double latitudeDegrees) //calculate plume
         {
+            double[] latitudeLongitude = DegreesToMetres(latitudeDegrees, longitudeDegrees);
+            double latitude = latitudeLongitude[0];
+            double longitude = latitudeLongitude[1] ;
 
+        timeError:
+            Console.WriteLine("Enter length of time for which volcano erupts");
+            double distance = 0;
+            try
+            {
+                distance = windSpeed * Convert.ToInt16(Console.ReadLine());
+
+            }
+            catch 
+            {
+                Console.WriteLine("That is not a valid time");
+                goto timeError;
+            }
+
+            Console.WriteLine("distance: " + distance);
+
+            double newLongitude = 0;
+            double newLatitude = 0;
+
+            if (windDirection == 0 || windDirection == 180 || windDirection == 360)
+            {
+                newLongitude = longitude;
+                newLatitude = latitude + (0.5 * distance);
+            }
+            else if (windDirection == 90 || windDirection == 270)
+            {
+                newLongitude = longitude + (0.5 * distance);
+                newLatitude = latitude;
+            }
+
+            double gradient = 1 / Math.Tan(windDirection * Math.PI / 180);//angle needed in radians
+            Console.WriteLine("gradient: "+gradient);
+
+            double deltaLongitude = Math.Pow((Math.Pow(0.5 * distance, 2) / Math.Pow(1 + gradient, 2)), 0.5); // deltaX = ( (0.5d)^2 / (1+m)^2 )^0.5
+            Console.WriteLine("deltaLongitude: "+deltaLongitude);
+
+            if (windDirection < 180)
+            {
+                newLongitude = longitude + deltaLongitude;
+            }
+            else if (windDirection > 180)
+            {
+                newLongitude = longitude - deltaLongitude;
+            }
+
+            if ((windDirection < 90 && windDirection > 0) || (windDirection > 260 && windDirection < 360))
+            {
+                newLatitude = latitude + (gradient * deltaLongitude);
+            }
+            else if (windDirection > 90 && windDirection < 270 && windDirection != 180)
+            {
+                newLatitude = latitude - (gradient * deltaLongitude);
+            }
+
+            double circleRadius = distance / 2;
+
+            Console.WriteLine("circleRadius: "+circleRadius);
+            Console.WriteLine("newLongitude + newLatitude");
+            Console.WriteLine(newLongitude + " " + newLatitude);
+
+            latitudeLongitude = MetresToDegrees(newLatitude, newLongitude);
+            latitudeDegrees = Math.Round(latitudeLongitude[0], 2);
+            longitudeDegrees = Math.Round(latitudeLongitude[1], 2);
+
+            Console.WriteLine("latitudeDegrees + longitudeDegrees");
+            Console.WriteLine(latitudeDegrees + "N " + longitudeDegrees + "E");
+
+        }
+
+        public static double[] DegreesToMetres(double latitude, double longitude)
+        {
+            int radiusEarth = 6371000;
+
+            //Convert Latitude
+            double lat1 = 0;
+            double lat2 = latitude * Math.PI / 180;
+            double deltaLat = (latitude - 0) * Math.PI / 180;
+            double deltaLon = 0;
+
+            double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                      Math.Cos(lat1) * Math.Cos(lat2) *
+                      Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            double latMetre = radiusEarth * c; // in metres
+            Console.WriteLine("latmetre: " + latMetre);
+
+            //Convert Longtitude
+            lat1 = 0;
+            lat2 = 0;
+            deltaLat = 0 * Math.PI / 180;
+            deltaLon = (longitude - 0) * Math.PI / 180;
+
+            a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                      Math.Cos(lat1) * Math.Cos(lat2) *
+                      Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+            c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            double longMetre = radiusEarth * c; // in metres
+            Console.WriteLine("lonmetre: " + longMetre);
+            double[] latLong = { latMetre, longMetre };
+            return latLong;
+        }
+
+        public static double[] MetresToDegrees(double latitudeMetres, double longitudeMetres)
+        {
+            int radiusEarth = 6371000; // Radius of the Earth in meters
+
+            // Calculate latitude in degrees
+            double lat1 = 0;
+            double lat2 = latitudeMetres / radiusEarth;
+            double deltaLat = (latitudeMetres - 0) / radiusEarth;
+
+            double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                       Math.Cos(lat1) * Math.Cos(lat2) *
+                       Math.Sin(0 / 2) * Math.Sin(0 / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            double latitude = (lat2 + lat1) * 180 / Math.PI;
+
+            // Calculate longitude in degrees
+            /*c = longitudeMetres / radiusEarth;
+            a = Math.Pow(Math.Sqrt(c * c / 4) + Math.Sqrt(1 - Math.Sqrt(c * c / 4)), 2);
+            double deltaLon = 2 * Math.Asin(Math.Sqrt(a));
+            */
+
+            
+            lat1 = 0;
+            lat2 = 0;
+            deltaLat = 0;
+            double deltaLon = longitudeMetres / (radiusEarth * Math.Cos((lat1 + lat2) / 2));
+
+            a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                Math.Cos(lat1) * Math.Cos(lat2) *
+                Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+            c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            
+            double longitude = (deltaLon + 0) * 180 / Math.PI;
+            
+            double[] latLong = { latitude, longitude };
+            return latLong;
         }
 
         public static void FlightTrackerAPI() //get flights in interrupt zone
@@ -279,6 +424,7 @@ namespace Flight_Interrupt
                     break;
                 case 1:
                     Console.WriteLine("Add record");
+                    AddRecord();
                     break;
                 case 2:
                     Console.WriteLine("Update record");
@@ -322,10 +468,44 @@ namespace Flight_Interrupt
                 Console.WriteLine(database);
             }
             Console.WriteLine("all good");
-
-
         }
 
+        public static void AddRecord()
+        {
+            Console.Clear();
+            Console.WriteLine("Add Record");
+            Console.WriteLine();
+            Console.WriteLine("add values in form VolcanoName, Longitude, Latitude, Country, Type, VEI");
+            string sqlValues = Console.ReadLine();
+
+            string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
+            SqlCeConnection connection = new SqlCeConnection(connectionString);
+            connection.Open();
+
+            SqlCeCommand command;
+            SqlCeDataReader dataReader;
+            string sql = "";
+            sql = "insert into VolcanoDatabase (VolcanoName, Longitude, Latitude, Country, Type, VEI) Values ("+ sqlValues + ");";
+            command = new SqlCeCommand(sql, connection);
+            dataReader = command.ExecuteReader();
+
+            //ouput
+            while (dataReader.Read())
+            {
+                string database = "";
+                database += dataReader.GetValue(0).ToString() + '\t';
+                for (int i = 1; i < 5; i++)
+                {
+                    if (dataReader.GetValue(i).ToString().Length < 8)
+                    {
+                        database += '\t';
+                    }
+                    database += dataReader.GetValue(i).ToString();
+                }
+                Console.WriteLine(database);
+            }
+            Console.WriteLine("all good");
+        }
 
     }
 }
