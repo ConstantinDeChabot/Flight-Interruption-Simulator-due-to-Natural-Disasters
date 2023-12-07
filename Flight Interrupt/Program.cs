@@ -475,8 +475,29 @@ namespace Flight_Interrupt
             Console.Clear();
             Console.WriteLine("Add Record");
             Console.WriteLine();
-            Console.WriteLine("add values in form VolcanoName, Longitude, Latitude, Country, Type, VEI");
-            string sqlValues = Console.ReadLine();
+
+            Console.WriteLine("----- Input Values -----");
+            Console.WriteLine("VolcanoID:");
+            string volcanoID = Console.ReadLine();
+            Console.WriteLine("VolcanoName:");
+            string volcanoName = Console.ReadLine();
+            Console.WriteLine("Type:");
+            string type = Console.ReadLine();
+            Console.WriteLine("Country:");
+            string country = Console.ReadLine();
+            Console.WriteLine("Latitude:");
+            string latitude = Console.ReadLine();
+            Console.WriteLine("Longitude:");
+            string longitude = Console.ReadLine();
+            Console.WriteLine("Altitude:");
+            string altitude = Console.ReadLine();
+            Console.WriteLine("VEI:");
+            string vei = Console.ReadLine();
+
+
+
+            //Console.WriteLine("add values in form VolcanoID, 'VolcanoName', 'Type', 'Country', Latitude, Longitude, Altitude, VEI");
+            //string sqlValues = Console.ReadLine();
 
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
             SqlCeConnection connection = new SqlCeConnection(connectionString);
@@ -484,27 +505,27 @@ namespace Flight_Interrupt
 
             SqlCeCommand command;
             SqlCeDataReader dataReader;
-            string sql = "";
-            sql = "insert into VolcanoDatabase (VolcanoName, Longitude, Latitude, Country, Type, VEI) Values ("+ sqlValues + ");";
+            string sql = "insert into [VolcanoDatabase] (VolcanoID, VolcanoName, Type, Country, Latitude, Longitude, Altitude, VEI) Values (@volcanoID, @volcanoName, @type, @country, @latitude, @longitude, @altitude, @vei)";
             command = new SqlCeCommand(sql, connection);
-            dataReader = command.ExecuteReader();
-
-            //ouput
-            while (dataReader.Read())
+            command.Parameters.AddWithValue("@volcanoID", volcanoID);
+            command.Parameters.AddWithValue("@volcanoName", volcanoName);
+            command.Parameters.AddWithValue("@type", type);
+            command.Parameters.AddWithValue("@country", country);
+            command.Parameters.AddWithValue("@latitude", latitude);
+            command.Parameters.AddWithValue("@longitude", longitude);
+            command.Parameters.AddWithValue("@altitude", altitude);
+            command.Parameters.AddWithValue("@vei", vei);
+            try
             {
-                string database = "";
-                database += dataReader.GetValue(0).ToString() + '\t';
-                for (int i = 1; i < 5; i++)
-                {
-                    if (dataReader.GetValue(i).ToString().Length < 8)
-                    {
-                        database += '\t';
-                    }
-                    database += dataReader.GetValue(i).ToString();
-                }
-                Console.WriteLine(database);
+                command.ExecuteNonQuery();
+                Console.WriteLine("Successfully added " + volcanoName);
             }
-            Console.WriteLine("all good");
+            catch (SqlCeException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            Console.WriteLine("Error");
+            Console.WriteLine("function addRecord() finished");
         }
 
     }
