@@ -7,9 +7,6 @@ namespace Flight_Interrupt
 {
     class Program
     {
-
-
-
         //initialise APIs
         public static HttpClient client = new HttpClient();
         public static HttpRequestMessage request = new HttpRequestMessage();
@@ -17,49 +14,22 @@ namespace Flight_Interrupt
         static async Task Main(string[] args)
         {
             Program program = new Program();
-            //READ API KEYS
-            var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
-            string[] APIKeys = File.ReadAllLines(path);
-            /* foreach (string line in APIKeys)
-            {
-                Console.WriteLine(line);
-            }
-            
-            //Flight Tracker API
 
-            var distance = 250;
-            client = new HttpClient();
-            request = new HttpRequestMessage
+            while (true) //Main loop to keep the user in the program
             {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri("https://adsbexchange-com1.p.rapidapi.com/v2/lat/51.46888/lon/-0.45536/dist/"+ distance +"/"),
-                Headers =
-                {
-                    { "X-RapidAPI-Key", APIKeys[0] },
-                    { "X-RapidAPI-Host", "adsbexchange-com1.p.rapidapi.com" },
-                },
-            };
-            using (var response = await client.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(body);
-            }
+                Console.Clear();
 
-            Console.WriteLine();
-
-
-            
-        */
-            while (true)
-            {
+                //Title screen for program
                 Console.WriteLine(" _____ _ _       _     _         ___       _                             _       ____  _           ");
                 Console.WriteLine("|  ___| (_) __ _| |__ | |_      |_ _|_ __ | |_ ___ _ __ _ __ _   _ _ __ | |_    / ___|(_)_ __ ___  ");
                 Console.WriteLine("| |_  | | |/ _` | '_ \\| __|      | || '_ \\| __/ _ \\ '__| '__| | | | '_ \\| __|   \\___ \\| | '_ ` _ \\ ");
                 Console.WriteLine("|  _| | | | (_| | | | | |_       | || | | | ||  __/ |  | |  | |_| | |_) | |_     ___) | | | | | | |");
                 Console.WriteLine("|_|   |_|_|\\__, |_| |_|\\__|     |___|_| |_|\\__\\___|_|  |_|   \\__,_| .__/ \\__|   |____/|_|_| |_| |_|");
                 Console.WriteLine("           |___/                                                  |_|                              ");
+
                 Console.ReadKey();
+
+                //Main Menu options
                 string[] mainMenuArray = { ">> Run Program   <<", ">> Edit database <<", ">> Exit program  <<" };
                 int mainMenuOption = MenuController("Main Menu", mainMenuArray);
                 Console.WriteLine(mainMenuOption);
@@ -85,7 +55,7 @@ namespace Flight_Interrupt
 
         //-------------------------------------------------------- Controls All Menus --------------------------------------------------------
 
-        static int MenuController(string menuName, string[] menuArray)
+        static int MenuController(string menuName, string[] menuArray) //controls indexing and formatting of menu
         {
             int index = 0;
             Console.Clear();
@@ -102,9 +72,9 @@ namespace Flight_Interrupt
                 {
                     index++;
                 }
-                else if (/*tempkey.Key == ConsoleKey.Spacebar ||*/ tempkey.Key == ConsoleKey.Enter)
+                else if (/*tempkey.Key == ConsoleKey.Spacebar ||*/ tempkey.Key == ConsoleKey.Enter) //key the user presses to confirm their choice
                 {
-                    Console.WriteLine(" exit loop, index:" + index);
+                    //Console.WriteLine(" exit loop, index:" + index);
                     return index;
                 }
 
@@ -123,16 +93,16 @@ namespace Flight_Interrupt
                 DisplayMenu(menuName, menuArray, index);
                 Console.SetCursorPosition(0, 11);
             }
-        } //controls indexing and formatting of menu
+        }
 
-        static void DisplayMenu(string menuName, string[] menuArray, int index)
+        static void DisplayMenu(string menuName, string[] menuArray, int index) //displays the menu and its options to user
         {
             int width = Console.WindowWidth;
             Console.SetCursorPosition((width / 2) - (menuName.Length / 2), 5);
             Console.WriteLine(menuName);
             Console.WriteLine();
 
-            for (int i = 0; i < menuArray.Length; i++)
+            for (int i = 0; i < menuArray.Length; i++) //changes the colour of the selected option
             {
                 Console.SetCursorPosition((Console.WindowWidth - menuArray[i].Length) / 2, 7 + i);
                 if (i == index)
@@ -149,21 +119,24 @@ namespace Flight_Interrupt
                 Console.ForegroundColor = ConsoleColor.White;
             }
 
-            Console.WriteLine(index);
-        } //displays the menu and its options to user
+            //Console.WriteLine(index);
+        } 
 
         //----------------------------------------------------------- Run Program ------------------------------------------------------------
 
-        public static async Task FlightInterruptProgram()
+        public static async Task FlightInterruptProgram() //Main program functions
         {
             double[] longLat = await VolcanoSearch();
 
             Program program = new Program();
             double[] speedDir = await program.WeatherAPI(longLat[0], longLat[1]);
 
-            PlumeCalculator(speedDir[0], speedDir[1], longLat[0], longLat[1]);
+            double[] flightAPIParameters = PlumeCalculator(speedDir[0], speedDir[1], longLat[0], longLat[1]);
+
+            await program.FlightTrackerAPI(flightAPIParameters[0], flightAPIParameters[1], flightAPIParameters[2]);
 
         }
+
         public static async Task<double[]> VolcanoSearch() //sql search for volcanos to erupt
         {
             //SQL
@@ -260,7 +233,7 @@ namespace Flight_Interrupt
             return speedDir;
         }
 
-        public static void PlumeCalculator(double windSpeed, double windDirection, double longitudeDegrees, double latitudeDegrees) //calculate plume
+        public static double[] PlumeCalculator(double windSpeed, double windDirection, double longitudeDegrees, double latitudeDegrees) //calculate plume
         {
             double[] latitudeLongitude = DegreesToMetres(latitudeDegrees, longitudeDegrees);
             double latitude = latitudeLongitude[0];
@@ -333,6 +306,8 @@ namespace Flight_Interrupt
             Console.WriteLine("latitudeDegrees + longitudeDegrees");
             Console.WriteLine(latitudeDegrees + "N " + longitudeDegrees + "E");
 
+            double[] flightAPIParameters = { circleRadius, latitudeDegrees, longitudeDegrees };
+            return flightAPIParameters;
         }
 
         public static double[] DegreesToMetres(double latitude, double longitude)
@@ -409,17 +384,40 @@ namespace Flight_Interrupt
             return latLong;
         }
 
-        public static void FlightTrackerAPI() //get flights in interrupt zone
+        public async Task FlightTrackerAPI(double radius, double latitude, double longitude) //get flights in interrupt zone
         {
+            //get API Keys
+            var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
+            string[] APIKeys = File.ReadAllLines(path);
 
+            //Flight Tracker API
+            client = new HttpClient();
+            request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri("https://adsbexchange-com1.p.rapidapi.com/v2/lat/"+ latitude + "/lon/"+ longitude + "/dist/" + radius + "/"),
+                Headers =
+                {
+                    { "X-RapidAPI-Key", APIKeys[0] },
+                    { "X-RapidAPI-Host", "adsbexchange-com1.p.rapidapi.com" },
+                },
+            };
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(body);
+            }
+
+            Console.WriteLine();
         }
         
         //------------------------------------------------------------- Database -------------------------------------------------------------
 
-        public static void EditDatabaseMenu() //display database, add record, update record, delete record
+        public static void EditDatabaseMenu() //display database, add record, update record, delete record, return to menu
         {
             Console.Clear();
-            string[] databaseMenuArray = { ">> Display database <<", ">>    Add record    <<", ">>  Update record   <<", ">>  Delete record   <<" };
+            string[] databaseMenuArray = { ">> Display database <<", ">>    Add record    <<", ">>  Update record   <<", ">>  Delete record   <<", ">>  Return to Menu   <<" };
             int databaseMenuOption = MenuController("Database Menu", databaseMenuArray);
             Console.WriteLine(databaseMenuOption);
             switch (databaseMenuOption)
@@ -440,7 +438,9 @@ namespace Flight_Interrupt
                     Console.WriteLine("Delete record");
                     DeleteRecord();
                     break;
-
+                case 4:
+                    Console.WriteLine("Return to Menu");
+                    break;
             }
         }
 
@@ -475,13 +475,14 @@ namespace Flight_Interrupt
                 }
                 Console.WriteLine(database);
             }
-            Console.WriteLine("all good");
 
             dataReader.Close();
             command.Dispose();
             connection.Close();
 
-            Console.ReadLine();
+            Console.WriteLine();
+            Console.WriteLine("Press any key toreturn to main menu");
+            Console.ReadKey();
         }
 
         public static void AddRecord()
@@ -538,7 +539,9 @@ namespace Flight_Interrupt
             command.Dispose();
             connection.Close();
 
-            Console.ReadLine();
+            Console.WriteLine();
+            Console.WriteLine("Press any key toreturn to main menu");
+            Console.ReadKey();
         }
 
         public static void UpdateRecord()
@@ -596,7 +599,9 @@ namespace Flight_Interrupt
             command.Dispose();
             connection.Close();
 
-            Console.ReadLine();
+            Console.WriteLine();
+            Console.WriteLine("Press any key toreturn to main menu");
+            Console.ReadKey();
         }
 
         public static void DeleteRecord()
@@ -627,7 +632,9 @@ namespace Flight_Interrupt
             command.Dispose();
             connection.Close();
 
-            Console.ReadLine();
+            Console.WriteLine();
+            Console.WriteLine("Press any key toreturn to main menu");
+            Console.ReadKey();
         }
     }
 }
