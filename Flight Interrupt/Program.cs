@@ -51,31 +51,35 @@ namespace Flight_Interrupt
 
             
         */
-            Console.WriteLine(" _____ _ _       _     _         ___       _                             _       ____  _           ");
-            Console.WriteLine("|  ___| (_) __ _| |__ | |_      |_ _|_ __ | |_ ___ _ __ _ __ _   _ _ __ | |_    / ___|(_)_ __ ___  ");
-            Console.WriteLine("| |_  | | |/ _` | '_ \\| __|      | || '_ \\| __/ _ \\ '__| '__| | | | '_ \\| __|   \\___ \\| | '_ ` _ \\ ");
-            Console.WriteLine("|  _| | | | (_| | | | | |_       | || | | | ||  __/ |  | |  | |_| | |_) | |_     ___) | | | | | | |");
-            Console.WriteLine("|_|   |_|_|\\__, |_| |_|\\__|     |___|_| |_|\\__\\___|_|  |_|   \\__,_| .__/ \\__|   |____/|_|_| |_| |_|");
-            Console.WriteLine("           |___/                                                  |_|                              ");
-            Console.ReadKey();
-            string[] mainMenuArray = { ">> Run Program   <<", ">> Edit database <<", ">> Exit program  <<" };
-            int mainMenuOption = MenuController("Main Menu", mainMenuArray);
-            Console.WriteLine(mainMenuOption);
-            switch (mainMenuOption)
+            while (true)
             {
-                case 0:
-                    Console.WriteLine("Run program");
-                    await FlightInterruptProgram();
-                    break;
-                case 1:
-                    Console.WriteLine("Edit Database");
-                    EditDatabaseMenu();
-                    break;
-                case 2:
-                    Console.WriteLine("Exit Program");
-                    Environment.Exit(0);
-                    break;
+                Console.WriteLine(" _____ _ _       _     _         ___       _                             _       ____  _           ");
+                Console.WriteLine("|  ___| (_) __ _| |__ | |_      |_ _|_ __ | |_ ___ _ __ _ __ _   _ _ __ | |_    / ___|(_)_ __ ___  ");
+                Console.WriteLine("| |_  | | |/ _` | '_ \\| __|      | || '_ \\| __/ _ \\ '__| '__| | | | '_ \\| __|   \\___ \\| | '_ ` _ \\ ");
+                Console.WriteLine("|  _| | | | (_| | | | | |_       | || | | | ||  __/ |  | |  | |_| | |_) | |_     ___) | | | | | | |");
+                Console.WriteLine("|_|   |_|_|\\__, |_| |_|\\__|     |___|_| |_|\\__\\___|_|  |_|   \\__,_| .__/ \\__|   |____/|_|_| |_| |_|");
+                Console.WriteLine("           |___/                                                  |_|                              ");
+                Console.ReadKey();
+                string[] mainMenuArray = { ">> Run Program   <<", ">> Edit database <<", ">> Exit program  <<" };
+                int mainMenuOption = MenuController("Main Menu", mainMenuArray);
+                Console.WriteLine(mainMenuOption);
+                switch (mainMenuOption)
+                {
+                    case 0:
+                        Console.WriteLine("Run program");
+                        await FlightInterruptProgram();
+                        break;
+                    case 1:
+                        Console.WriteLine("Edit Database");
+                        EditDatabaseMenu();
+                        break;
+                    case 2:
+                        Console.WriteLine("Exit Program");
+                        Environment.Exit(0);
+                        break;
+                }
             }
+            
 
         }
 
@@ -173,6 +177,7 @@ namespace Flight_Interrupt
             SqlCeDataReader dataReader; //used to get data specified by query
             string sql = ""; //contains the sql query
 
+            invalidNameInput:
             Console.WriteLine("Enter name of volcano");
             string volcanoName = Console.ReadLine();
             double longitude = 0;
@@ -198,6 +203,7 @@ namespace Flight_Interrupt
                 Console.WriteLine("There seems to be a problem");
                 Console.WriteLine("Press 1 to try again");
                 Console.WriteLine("Press 2 to go to menu");
+                goto invalidNameInput;
             }
 
             //close the objects
@@ -428,9 +434,11 @@ namespace Flight_Interrupt
                     break;
                 case 2:
                     Console.WriteLine("Update record");
+                    UpdateRecord();
                     break;
                 case 3:
                     Console.WriteLine("Delete record");
+                    DeleteRecord();
                     break;
 
             }
@@ -468,6 +476,12 @@ namespace Flight_Interrupt
                 Console.WriteLine(database);
             }
             Console.WriteLine("all good");
+
+            dataReader.Close();
+            command.Dispose();
+            connection.Close();
+
+            Console.ReadLine();
         }
 
         public static void AddRecord()
@@ -494,11 +508,6 @@ namespace Flight_Interrupt
             Console.WriteLine("VEI:");
             string vei = Console.ReadLine();
 
-
-
-            //Console.WriteLine("add values in form VolcanoID, 'VolcanoName', 'Type', 'Country', Latitude, Longitude, Altitude, VEI");
-            //string sqlValues = Console.ReadLine();
-
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
             SqlCeConnection connection = new SqlCeConnection(connectionString);
             connection.Open();
@@ -524,9 +533,101 @@ namespace Flight_Interrupt
             {
                 Console.WriteLine("Error: " + ex.Message);
             }
-            Console.WriteLine("Error");
             Console.WriteLine("function addRecord() finished");
+
+            command.Dispose();
+            connection.Close();
+
+            Console.ReadLine();
         }
 
+        public static void UpdateRecord()
+        {
+            Console.Clear();
+            Console.WriteLine("Update Record");
+            Console.WriteLine();
+
+            Console.WriteLine("----- Input Values -----");
+            Console.WriteLine("Current VolcanoID:");
+            string volcanoID = Console.ReadLine();
+            Console.WriteLine("New VolcanoName:");
+            string volcanoName = Console.ReadLine();
+            Console.WriteLine("New Type:");
+            string type = Console.ReadLine();
+            Console.WriteLine("New Country:");
+            string country = Console.ReadLine();
+            Console.WriteLine("New Latitude:");
+            string latitude = Console.ReadLine();
+            Console.WriteLine("New Longitude:");
+            string longitude = Console.ReadLine();
+            Console.WriteLine("New Altitude:");
+            string altitude = Console.ReadLine();
+            Console.WriteLine("New VEI:");
+            string vei = Console.ReadLine();
+
+            string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
+            SqlCeConnection connection = new SqlCeConnection(connectionString);
+            connection.Open();
+
+            SqlCeCommand command;
+            SqlCeDataReader dataReader;
+            //string sql = "update [VolcanoDatabase] (VolcanoID, VolcanoName, Type, Country, Latitude, Longitude, Altitude, VEI) Values (@volcanoID, @volcanoName, @type, @country, @latitude, @longitude, @altitude, @vei)";
+            string sql = "update [VolcanoDatabase] set volcanoName = '"+ volcanoName + "', type = '" + type + "', country = '" + country + "', latitude = " + latitude + ", longitude = "+ longitude + ", Altitude = " + altitude + ", vei = "+ vei + " where VolcanoID = " + volcanoID + ";";
+            command = new SqlCeCommand(sql, connection);
+            command.Parameters.AddWithValue("@volcanoID", volcanoID);
+            command.Parameters.AddWithValue("@volcanoName", volcanoName);
+            command.Parameters.AddWithValue("@type", type);
+            command.Parameters.AddWithValue("@country", country);
+            command.Parameters.AddWithValue("@latitude", latitude);
+            command.Parameters.AddWithValue("@longitude", longitude);
+            command.Parameters.AddWithValue("@altitude", altitude);
+            command.Parameters.AddWithValue("@vei", vei);
+            try
+            {
+                command.ExecuteNonQuery();
+                Console.WriteLine("Successfully updated " + volcanoName);
+            }
+            catch (SqlCeException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            Console.WriteLine("function UpdateRecord() finished");
+
+            command.Dispose();
+            connection.Close();
+
+            Console.ReadLine();
+        }
+
+        public static void DeleteRecord()
+        {
+            Console.WriteLine("Delete Record");
+            Console.WriteLine();
+            Console.WriteLine("Enter the name of the volcano to delete from the database");
+            //DELETE FROM table_name WHERE condition;
+            string volcanoName = Console.ReadLine();
+
+            string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
+            SqlCeConnection connection = new SqlCeConnection(connectionString);
+            connection.Open();
+
+            SqlCeCommand command;
+            SqlCeDataReader dataReader;
+            string sql = "delete from VolcanoDatabase where volcanoName = '" + volcanoName + "'";
+            command = new SqlCeCommand(sql, connection);
+            try
+            {
+                command.ExecuteNonQuery();
+                Console.WriteLine("Successfully deleted " + volcanoName);
+            }
+            catch (SqlCeException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            command.Dispose();
+            connection.Close();
+
+            Console.ReadLine();
+        }
     }
 }
