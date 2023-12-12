@@ -481,7 +481,7 @@ namespace Flight_Interrupt
             connection.Close();
 
             Console.WriteLine();
-            Console.WriteLine("Press any key toreturn to main menu");
+            Console.WriteLine("Press any key to return to main menu");
             Console.ReadKey();
         }
 
@@ -540,7 +540,7 @@ namespace Flight_Interrupt
             connection.Close();
 
             Console.WriteLine();
-            Console.WriteLine("Press any key toreturn to main menu");
+            Console.WriteLine("Press any key to return to main menu");
             Console.ReadKey();
         }
 
@@ -600,7 +600,7 @@ namespace Flight_Interrupt
             connection.Close();
 
             Console.WriteLine();
-            Console.WriteLine("Press any key toreturn to main menu");
+            Console.WriteLine("Press any key to return to main menu");
             Console.ReadKey();
         }
 
@@ -633,7 +633,7 @@ namespace Flight_Interrupt
             connection.Close();
 
             Console.WriteLine();
-            Console.WriteLine("Press any key toreturn to main menu");
+            Console.WriteLine("Press any key to return to main menu");
             Console.ReadKey();
         }
     }
