@@ -168,7 +168,30 @@ namespace Flight_Interrupt
                 invalidInput = false;
                 longitude = Convert.ToDouble(dataReader.GetValue(1));
                 latitude = Convert.ToDouble(dataReader.GetValue(2));
-                Console.WriteLine(dataReader.GetValue(0) + ": " + Math.Round(latitude, 2) + "N, " + Math.Round(longitude,2) + "E");
+
+                Console.WriteLine();
+                //Console.WriteLine(dataReader.GetValue(0) + ": " + Math.Round(latitude, 2) + "N, " + Math.Round(longitude,2) + "E");
+                Console.Write(dataReader.GetValue(0) + ": ");
+
+                if (latitude < 0)
+                {
+                    Console.Write(Math.Round(Math.Abs(latitude), 2) + "S, ");
+                }
+                else
+                {
+                    Console.Write(Math.Round(latitude, 2) + "N, ");
+                }
+                
+                if (longitude < 0)
+                {
+                    Console.Write(Math.Round(Math.Abs(longitude), 2) + "W");
+                }
+                else
+                {
+
+                    Console.Write(Math.Round(longitude, 2) + "E");
+                }
+
                 Console.WriteLine("all good");
             }
             if (invalidInput)
@@ -464,7 +487,7 @@ namespace Flight_Interrupt
             while (dataReader.Read())
             {
                 string database = "";
-                database += dataReader.GetValue(0).ToString() + '\t';
+                database += dataReader.GetValue(0).ToString() + '\t' + " ";
                 for (int i = 1; i < 5; i++)
                 {
                     if (dataReader.GetValue(i).ToString().Length < 8)
@@ -500,9 +523,9 @@ namespace Flight_Interrupt
             string type = Console.ReadLine();
             Console.WriteLine("Country:");
             string country = Console.ReadLine();
-            Console.WriteLine("Latitude:");
+            Console.WriteLine("Latitude (In terms of N):");
             string latitude = Console.ReadLine();
-            Console.WriteLine("Longitude:");
+            Console.WriteLine("Longitude (In terms of E:");
             string longitude = Console.ReadLine();
             Console.WriteLine("Altitude:");
             string altitude = Console.ReadLine();
@@ -559,9 +582,9 @@ namespace Flight_Interrupt
             string type = Console.ReadLine();
             Console.WriteLine("New Country:");
             string country = Console.ReadLine();
-            Console.WriteLine("New Latitude:");
+            Console.WriteLine("New Latitude (In terms of N):");
             string latitude = Console.ReadLine();
-            Console.WriteLine("New Longitude:");
+            Console.WriteLine("New Longitude (In terms of E:");
             string longitude = Console.ReadLine();
             Console.WriteLine("New Altitude:");
             string altitude = Console.ReadLine();
