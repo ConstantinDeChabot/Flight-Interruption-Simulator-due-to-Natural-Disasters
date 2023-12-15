@@ -126,7 +126,7 @@ namespace Flight_Interrupt
 
         public static async Task FlightInterruptProgram() //Main program functions
         {
-            double[] longLat = await VolcanoSearch();
+            double[] longLat = await VolcanoSearch(); 
 
             Program program = new Program();
             double[] speedDir = await program.WeatherAPI(longLat[0], longLat[1]);
@@ -139,6 +139,7 @@ namespace Flight_Interrupt
 
         public static async Task<double[]> VolcanoSearch() //sql search for volcanos to erupt
         {
+            Console.Clear();
             //SQL
             //connect VS to SQL database
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
@@ -169,8 +170,9 @@ namespace Flight_Interrupt
                 longitude = Convert.ToDouble(dataReader.GetValue(1));
                 latitude = Convert.ToDouble(dataReader.GetValue(2));
 
-                Console.WriteLine();
                 //Console.WriteLine(dataReader.GetValue(0) + ": " + Math.Round(latitude, 2) + "N, " + Math.Round(longitude,2) + "E");
+                Console.WriteLine();
+                Console.WriteLine("Volcano has been found");
                 Console.Write(dataReader.GetValue(0) + ": ");
 
                 if (latitude < 0)
@@ -191,8 +193,8 @@ namespace Flight_Interrupt
 
                     Console.Write(Math.Round(longitude, 2) + "E");
                 }
-
-                Console.WriteLine("all good");
+                Console.WriteLine();
+                //Console.WriteLine("all good");
             }
             if (invalidInput)
             {
@@ -211,6 +213,7 @@ namespace Flight_Interrupt
             return longLat;
         }
 
+        // Objective Point: 2.a
         public async Task<double[]> WeatherAPI(double longitude, double latitude) //get weather for volcano
         {
             //get API Keys
@@ -219,7 +222,7 @@ namespace Flight_Interrupt
 
             //Weather Tracker API
             string url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + latitude + "%2C" + longitude + "?unitGroup=metric&include=current&key=" + APIKeys[1] + "&contentType=json";
-            Console.WriteLine(url);
+            //Console.WriteLine(url);
             client = new HttpClient(); 
             request = new HttpRequestMessage
             {
@@ -234,17 +237,20 @@ namespace Flight_Interrupt
             if (response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                //Console.WriteLine(body); //write out whole API response
+                
+                //Console.WriteLine(body); //write out whole API response for testing
 
                 var obj = JsonSerializer.Deserialize<WeatherAPIResponse>(body); //sort the response
-                
-                Console.WriteLine("Output Values:"); //ouput necessary values
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine("Weather Values:"); //ouput necessary values
 
-                windSpeed = obj.days[0].windspeed / 3.6;
-                windDirection = (obj.days[0].winddir + 180) % 360;
+                // Objective Point 2.a.i
+                windSpeed = obj.days[0].windspeed / 3.6; // converts speed from km/h to m/s
+                windDirection = (obj.days[0].winddir + 180) % 360; // changes bearing from where the wind blows from to where it blows to
 
-                Console.WriteLine("wind speed: " + windSpeed + " mps");
-                Console.WriteLine("wind dir: " + windDirection + "°");
+                Console.WriteLine("Wind speed: " + Math.Round(windSpeed , 2) + " mps");
+                Console.WriteLine("Wind dir: " + Math.Round(windDirection) + "°");
             }
             else
             {
@@ -263,11 +269,11 @@ namespace Flight_Interrupt
             double longitude = latitudeLongitude[1] ;
 
         timeError:
-            Console.WriteLine("Enter length of time for which volcano erupts");
+            Console.WriteLine("Enter length of time for which volcano erupts: (in seconds)");
             double distance = 0;
             try
             {
-                distance = windSpeed * Convert.ToInt16(Console.ReadLine());
+                distance = windSpeed * Convert.ToInt32(Console.ReadLine()); //objective point 2.b.i
 
             }
             catch 
@@ -276,12 +282,14 @@ namespace Flight_Interrupt
                 goto timeError;
             }
 
-            Console.WriteLine("distance: " + distance);
+            Console.WriteLine();
+            Console.WriteLine("---- Calculations ----");
+            Console.WriteLine("Total distance: " + distance);
 
             double newLongitude = 0;
             double newLatitude = 0;
 
-            if (windDirection == 0 || windDirection == 180 || windDirection == 360)
+            if (windDirection == 0 || windDirection == 180 || windDirection == 360) //objective point 2.c.i
             {
                 newLongitude = longitude;
                 newLatitude = latitude + (0.5 * distance);
@@ -293,7 +301,7 @@ namespace Flight_Interrupt
             }
 
             double gradient = 1 / Math.Tan(windDirection * Math.PI / 180);//angle needed in radians
-            Console.WriteLine("gradient: "+gradient);
+            Console.WriteLine("gradient of plume: "+gradient); //objective point 2.c.ii
 
             double deltaLongitude = Math.Pow((Math.Pow(0.5 * distance, 2) / Math.Pow(1 + gradient, 2)), 0.5); // deltaX = ( (0.5d)^2 / (1+m)^2 )^0.5
             Console.WriteLine("deltaLongitude: "+deltaLongitude);
@@ -317,8 +325,10 @@ namespace Flight_Interrupt
             }
 
             double circleRadius = distance / 2;
+            Console.WriteLine("circleRadius: " + circleRadius);
+            circleRadius = Math.Round(circleRadius / 1852);
 
-            Console.WriteLine("circleRadius: "+circleRadius);
+
             Console.WriteLine("newLongitude + newLatitude");
             Console.WriteLine(newLongitude + " " + newLatitude);
 
@@ -329,12 +339,16 @@ namespace Flight_Interrupt
             Console.WriteLine("latitudeDegrees + longitudeDegrees");
             Console.WriteLine(latitudeDegrees + "N " + longitudeDegrees + "E");
 
+            Console.WriteLine();
+
             double[] flightAPIParameters = { circleRadius, latitudeDegrees, longitudeDegrees };
             return flightAPIParameters;
         }
 
         public static double[] DegreesToMetres(double latitude, double longitude)
         {
+            Console.WriteLine();
+            Console.WriteLine();
             int radiusEarth = 6371000;
 
             //Convert Latitude
@@ -349,7 +363,7 @@ namespace Flight_Interrupt
             double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
             double latMetre = radiusEarth * c; // in metres
-            Console.WriteLine("latmetre: " + latMetre);
+            Console.WriteLine("Latitude in metres: " + Math.Round(latMetre));
 
             //Convert Longtitude
             lat1 = 0;
@@ -363,8 +377,10 @@ namespace Flight_Interrupt
             c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
             double longMetre = radiusEarth * c; // in metres
-            Console.WriteLine("lonmetre: " + longMetre);
+            Console.WriteLine("Longitude in metres: " + Math.Round(longMetre));
             double[] latLong = { latMetre, longMetre };
+            Console.WriteLine();
+            Console.WriteLine();
             return latLong;
         }
 
@@ -425,14 +441,62 @@ namespace Flight_Interrupt
                     { "X-RapidAPI-Host", "adsbexchange-com1.p.rapidapi.com" },
                 },
             };
+
+            var response = await client.SendAsync(request);
+            string flightNumber;
+            string flightRegistration;
+            double flightLatitude;
+            double flightLongitude;
+            int numberOfFlights;
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+
+                //Console.WriteLine(body);//write out whole API response for testing
+                Console.WriteLine();
+
+                var obj = JsonSerializer.Deserialize<FlightAPIResponse>(body); //sort the response
+                numberOfFlights = obj.total;
+                if(numberOfFlights == 0)
+                {
+                    Console.WriteLine("There are currently no flights that would be interrupted");
+                }
+                else
+                {
+                    Console.WriteLine("--- There are " + numberOfFlights + " planes in the interrupt area ---");
+                    Console.WriteLine();
+
+                    for (int i = 0; i < numberOfFlights; i++)
+                    {
+                        Console.WriteLine("---- Plane: " + (i + 1) + " ----");
+
+                        flightNumber = obj.ac[i].flight;
+                        Console.WriteLine("Flight: " + flightNumber);
+                        flightRegistration = obj.ac[i].r;
+                        Console.WriteLine("Registration: " + flightRegistration);
+                        flightLatitude = obj.ac[i].lat;
+                        flightLongitude = obj.ac[i].lon;
+                        Console.WriteLine("Position: " + latitude + "N, " + longitude + "S");
+                        Console.WriteLine();
+                    }
+                }
+
+
+            }
+            else
+            {
+                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
+            }
+            Console.WriteLine("Flight API Complete");
+            /*
             using (var response = await client.SendAsync(request))
             {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
                 Console.WriteLine(body);
             }
-
-            Console.WriteLine();
+            */
+            Console.ReadKey();
         }
         
         //------------------------------------------------------------- Database -------------------------------------------------------------
