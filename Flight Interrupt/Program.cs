@@ -363,6 +363,11 @@ namespace Flight_Interrupt
             double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
             double latMetre = radiusEarth * c; // in metres
+
+            if (latitude < 0)
+            {
+                latMetre = latMetre * -1;
+            }
             Console.WriteLine("Latitude in metres: " + Math.Round(latMetre));
 
             //Convert Longtitude
@@ -377,6 +382,11 @@ namespace Flight_Interrupt
             c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
             double longMetre = radiusEarth * c; // in metres
+
+            if (longitude < 0)
+            {
+                longMetre = longMetre * -1;
+            }
             Console.WriteLine("Longitude in metres: " + Math.Round(longMetre));
             double[] latLong = { latMetre, longMetre };
             Console.WriteLine();
@@ -476,7 +486,7 @@ namespace Flight_Interrupt
                         Console.WriteLine("Registration: " + flightRegistration);
                         flightLatitude = obj.ac[i].lat;
                         flightLongitude = obj.ac[i].lon;
-                        Console.WriteLine("Position: " + latitude + "N, " + longitude + "S");
+                        Console.WriteLine("Position: " + latitude + "N, " + longitude + "E");
                         Console.WriteLine();
                     }
                 }
