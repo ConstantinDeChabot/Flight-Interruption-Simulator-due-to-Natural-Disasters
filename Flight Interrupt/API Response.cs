@@ -73,17 +73,20 @@ namespace Flight_Interrupt
 
     public class Aircraft
     {
-        public string hex { get; set; }
-        public string type { get; set; }
+        //public string hex { get; set; }
+        //public string type { get; set; }
         public string flight { get; set; }
         public string r { get; set; }
+        /*
         public string t { get; set; }
         public int alt_baro { get; set; }
         public int alt_geom { get; set; }
         public float gs { get; set; }
         public int ias { get; set; }
         public int tas { get; set; }
+        */
         public float mach { get; set; }
+        /*
         public int wd { get; set; }
         public int ws { get; set; }
         public int oat { get; set; }
@@ -97,8 +100,10 @@ namespace Flight_Interrupt
         public string squawk { get; set; }
         public string category { get; set; }
         public int nav_altitude_mcp { get; set; }
+        */
         public float lat { get; set; }
         public float lon { get; set; }
+        /*
         public int nic { get; set; }
         public int rc { get; set; }
         public float seen_pos { get; set; }
@@ -116,6 +121,7 @@ namespace Flight_Interrupt
         public float rssi { get; set; }
         public float dst { get; set; }
         public float dir { get; set; }
+        */
     }
 
 }

@@ -62,7 +62,7 @@ namespace Flight_Interrupt
             DisplayMenu(menuName, menuArray, index);
             while (true) //error handling + wait until user enters one of desired options
             {
-                ConsoleKeyInfo tempkey = Console.ReadKey(true);
+                ConsoleKeyInfo tempkey = Console.ReadKey(true); // stores current key press without diplaying it to the user
 
                 if (tempkey.Key == ConsoleKey.UpArrow)
                 {
@@ -80,8 +80,8 @@ namespace Flight_Interrupt
 
                 Console.Clear();
 
-                Console.SetCursorPosition(5, 10);
-                if (index < 0)
+                Console.SetCursorPosition(5, 10); 
+                if (index < 0) // loop the menu options
                 {
                     index += menuArray.Length;
                 }
@@ -95,7 +95,7 @@ namespace Flight_Interrupt
             }
         }
 
-        static void DisplayMenu(string menuName, string[] menuArray, int index) //displays the menu and its options to user
+        static void DisplayMenu(string menuName, string[] menuArray, int index) //displays the menu and its options to user centred
         {
             int width = Console.WindowWidth;
             Console.SetCursorPosition((width / 2) - (menuName.Length / 2), 5);
@@ -111,7 +111,7 @@ namespace Flight_Interrupt
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.WriteLine(menuArray[i]);
                 }
-                else
+                else //remove >>____<< from each unselected option
                 {
                     Console.WriteLine(menuArray[i].Replace('>', ' ').Replace('<', ' '));
                 }
@@ -173,7 +173,7 @@ namespace Flight_Interrupt
                 //Console.WriteLine(dataReader.GetValue(0) + ": " + Math.Round(latitude, 2) + "N, " + Math.Round(longitude,2) + "E");
                 Console.WriteLine();
                 Console.WriteLine("Volcano has been found");
-                Console.Write(dataReader.GetValue(0) + ": ");
+                Console.Write(dataReader.GetValue(0) + ": "); // replace negative coordinates of N and E to S and W
 
                 if (latitude < 0)
                 {
@@ -219,7 +219,6 @@ namespace Flight_Interrupt
             //get API Keys
             var path = @"\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/Secrets.txt";
             string[] APIKeys = File.ReadAllLines(path);
-
             //Weather Tracker API
             string url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/" + latitude + "%2C" + longitude + "?unitGroup=metric&include=current&key=" + APIKeys[1] + "&contentType=json";
             //Console.WriteLine(url);
@@ -233,6 +232,7 @@ namespace Flight_Interrupt
             double windSpeed = 0;
             double windDirection = 0;
 
+            //send request and check for success
             var response = await client.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
@@ -264,7 +264,7 @@ namespace Flight_Interrupt
 
         public static double[] PlumeCalculator(double windSpeed, double windDirection, double longitudeDegrees, double latitudeDegrees) //calculate plume
         {
-            double[] latitudeLongitude = DegreesToMetres(latitudeDegrees, longitudeDegrees);
+            double[] latitudeLongitude = DegreesToMetres(latitudeDegrees, longitudeDegrees); //convert to metres
             double latitude = latitudeLongitude[0];
             double longitude = latitudeLongitude[1] ;
 
@@ -273,7 +273,8 @@ namespace Flight_Interrupt
             double distance = 0;
             try
             {
-                distance = windSpeed * Convert.ToInt32(Console.ReadLine()); //objective point 2.b.i
+                //objective point 2.b.i
+                distance = windSpeed * Convert.ToInt32(Console.ReadLine()); 
 
             }
             catch 
@@ -289,7 +290,8 @@ namespace Flight_Interrupt
             double newLongitude = 0;
             double newLatitude = 0;
 
-            if (windDirection == 0 || windDirection == 180 || windDirection == 360) //objective point 2.c.i
+            //objective point 2.c.i
+            if (windDirection == 0 || windDirection == 180 || windDirection == 360) 
             {
                 newLongitude = longitude;
                 newLatitude = latitude + (0.5 * distance);
@@ -300,12 +302,16 @@ namespace Flight_Interrupt
                 newLatitude = latitude;
             }
 
-            double gradient = 1 / Math.Tan(windDirection * Math.PI / 180);//angle needed in radians
-            Console.WriteLine("gradient of plume: "+gradient); //objective point 2.c.ii
+            double gradient = 1 / Math.Tan(windDirection * Math.PI / 180); //angle needed in radians
+            
+            //objective point 2.c.ii
+            Console.WriteLine("gradient of plume: "+gradient); 
 
+            //obejctive point 3.a.i
             double deltaLongitude = Math.Pow((Math.Pow(0.5 * distance, 2) / Math.Pow(1 + gradient, 2)), 0.5); // deltaX = ( (0.5d)^2 / (1+m)^2 )^0.5
             Console.WriteLine("deltaLongitude: "+deltaLongitude);
 
+            // Calculate new coordinate
             if (windDirection < 180)
             {
                 newLongitude = longitude + deltaLongitude;
@@ -324,15 +330,17 @@ namespace Flight_Interrupt
                 newLatitude = latitude - (gradient * deltaLongitude);
             }
 
+            //objective point 3.b.i
             double circleRadius = distance / 2;
             Console.WriteLine("circleRadius: " + circleRadius);
+            //objective point 3.b.ii
             circleRadius = Math.Round(circleRadius / 1852);
 
 
             Console.WriteLine("newLongitude + newLatitude");
             Console.WriteLine(newLongitude + " " + newLatitude);
 
-            latitudeLongitude = MetresToDegrees(newLatitude, newLongitude);
+            latitudeLongitude = MetresToDegrees(newLatitude, newLongitude); //convert back to degrees
             latitudeDegrees = Math.Round(latitudeLongitude[0], 2);
             longitudeDegrees = Math.Round(latitudeLongitude[1], 2);
 
@@ -398,6 +406,8 @@ namespace Flight_Interrupt
         {
             int radiusEarth = 6371000; // Radius of the Earth in meters
 
+            // Calculates using change in latitude and change in longitude individually
+
             // Calculate latitude in degrees
             double lat1 = 0;
             double lat2 = latitudeMetres / radiusEarth;
@@ -411,12 +421,6 @@ namespace Flight_Interrupt
             double latitude = (lat2 + lat1) * 180 / Math.PI;
 
             // Calculate longitude in degrees
-            /*c = longitudeMetres / radiusEarth;
-            a = Math.Pow(Math.Sqrt(c * c / 4) + Math.Sqrt(1 - Math.Sqrt(c * c / 4)), 2);
-            double deltaLon = 2 * Math.Asin(Math.Sqrt(a));
-            */
-
-            
             lat1 = 0;
             lat2 = 0;
             deltaLat = 0;
@@ -440,6 +444,7 @@ namespace Flight_Interrupt
             string[] APIKeys = File.ReadAllLines(path);
 
             //Flight Tracker API
+            //objective pint 3.c
             client = new HttpClient();
             request = new HttpRequestMessage
             {
@@ -452,12 +457,14 @@ namespace Flight_Interrupt
                 },
             };
 
+            // creates variables to use
             var response = await client.SendAsync(request);
             string flightNumber;
             string flightRegistration;
             double flightLatitude;
             double flightLongitude;
             int numberOfFlights;
+            double flightSpeed;
             if (response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
@@ -476,17 +483,24 @@ namespace Flight_Interrupt
                     Console.WriteLine("--- There are " + numberOfFlights + " planes in the interrupt area ---");
                     Console.WriteLine();
 
+                    //loop through each plane and output relevant information to the user
+                    //objective point 4
                     for (int i = 0; i < numberOfFlights; i++)
                     {
                         Console.WriteLine("---- Plane: " + (i + 1) + " ----");
 
                         flightNumber = obj.ac[i].flight;
                         Console.WriteLine("Flight: " + flightNumber);
+
                         flightRegistration = obj.ac[i].r;
                         Console.WriteLine("Registration: " + flightRegistration);
+
                         flightLatitude = obj.ac[i].lat;
                         flightLongitude = obj.ac[i].lon;
-                        Console.WriteLine("Position: " + latitude + "N, " + longitude + "E");
+                        Console.WriteLine("Position: " + Math.Round(flightLatitude, 2) + "N, " + Math.Round(flightLongitude, 2) + "E");
+
+                        flightSpeed = obj.ac[i].mach;
+                        Console.WriteLine("Speed: mach " + Math.Round(flightSpeed, 3));
                         Console.WriteLine();
                     }
                 }
@@ -498,14 +512,6 @@ namespace Flight_Interrupt
                 Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
             }
             Console.WriteLine("Flight API Complete");
-            /*
-            using (var response = await client.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(body);
-            }
-            */
             Console.ReadKey();
         }
         
@@ -546,6 +552,7 @@ namespace Flight_Interrupt
             Console.Clear();
             Console.WriteLine("Display database");
 
+            //create connection to sql database
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
             SqlCeConnection connection = new SqlCeConnection(connectionString);
             connection.Open();
@@ -553,13 +560,14 @@ namespace Flight_Interrupt
             SqlCeCommand command;
             SqlCeDataReader dataReader;
             string sql = "";
-            sql = "select VolcanoName, Longitude, Latitude, Country, Type, VEI from VolcanoDatabase";
+            sql = "select VolcanoName, Longitude, Latitude, Country, Type, VEI from VolcanoDatabase"; //select all values
             command = new SqlCeCommand(sql, connection);
             dataReader = command.ExecuteReader();
 
             //ouput
             while (dataReader.Read())
             {
+                //format slightly to make more readable
                 string database = "";
                 database += dataReader.GetValue(0).ToString() + '\t' + " ";
                 for (int i = 1; i < 5; i++)
@@ -588,6 +596,7 @@ namespace Flight_Interrupt
             Console.WriteLine("Add Record");
             Console.WriteLine();
 
+            //get values to create the record
             Console.WriteLine("----- Input Values -----");
             Console.WriteLine("VolcanoID:");
             string volcanoID = Console.ReadLine();
@@ -599,17 +608,19 @@ namespace Flight_Interrupt
             string country = Console.ReadLine();
             Console.WriteLine("Latitude (In terms of N):");
             string latitude = Console.ReadLine();
-            Console.WriteLine("Longitude (In terms of E:");
+            Console.WriteLine("Longitude (In terms of E):");
             string longitude = Console.ReadLine();
             Console.WriteLine("Altitude:");
             string altitude = Console.ReadLine();
             Console.WriteLine("VEI:");
             string vei = Console.ReadLine();
 
+            //sql connection
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
             SqlCeConnection connection = new SqlCeConnection(connectionString);
             connection.Open();
 
+            //sql command
             SqlCeCommand command;
             SqlCeDataReader dataReader;
             string sql = "insert into [VolcanoDatabase] (VolcanoID, VolcanoName, Type, Country, Latitude, Longitude, Altitude, VEI) Values (@volcanoID, @volcanoName, @type, @country, @latitude, @longitude, @altitude, @vei)";
@@ -622,6 +633,8 @@ namespace Flight_Interrupt
             command.Parameters.AddWithValue("@longitude", longitude);
             command.Parameters.AddWithValue("@altitude", altitude);
             command.Parameters.AddWithValue("@vei", vei);
+            
+            //try to execute command
             try
             {
                 command.ExecuteNonQuery();
@@ -647,6 +660,7 @@ namespace Flight_Interrupt
             Console.WriteLine("Update Record");
             Console.WriteLine();
 
+            //get new values to update record
             Console.WriteLine("----- Input Values -----");
             Console.WriteLine("Current VolcanoID:");
             string volcanoID = Console.ReadLine();
@@ -658,7 +672,7 @@ namespace Flight_Interrupt
             string country = Console.ReadLine();
             Console.WriteLine("New Latitude (In terms of N):");
             string latitude = Console.ReadLine();
-            Console.WriteLine("New Longitude (In terms of E:");
+            Console.WriteLine("New Longitude (In terms of E):");
             string longitude = Console.ReadLine();
             Console.WriteLine("New Altitude:");
             string altitude = Console.ReadLine();
@@ -671,9 +685,11 @@ namespace Flight_Interrupt
 
             SqlCeCommand command;
             SqlCeDataReader dataReader;
-            //string sql = "update [VolcanoDatabase] (VolcanoID, VolcanoName, Type, Country, Latitude, Longitude, Altitude, VEI) Values (@volcanoID, @volcanoName, @type, @country, @latitude, @longitude, @altitude, @vei)";
             string sql = "update [VolcanoDatabase] set volcanoName = '"+ volcanoName + "', type = '" + type + "', country = '" + country + "', latitude = " + latitude + ", longitude = "+ longitude + ", Altitude = " + altitude + ", vei = "+ vei + " where VolcanoID = " + volcanoID + ";";
+            //string sql = "update [VolcanoDatabase] (VolcanoID, VolcanoName, Type, Country, Latitude, Longitude, Altitude, VEI) Values (@volcanoID, @volcanoName, @type, @country, @latitude, @longitude, @altitude, @vei)";
+            
             command = new SqlCeCommand(sql, connection);
+            /*
             command.Parameters.AddWithValue("@volcanoID", volcanoID);
             command.Parameters.AddWithValue("@volcanoName", volcanoName);
             command.Parameters.AddWithValue("@type", type);
@@ -682,6 +698,7 @@ namespace Flight_Interrupt
             command.Parameters.AddWithValue("@longitude", longitude);
             command.Parameters.AddWithValue("@altitude", altitude);
             command.Parameters.AddWithValue("@vei", vei);
+            */
             try
             {
                 command.ExecuteNonQuery();
@@ -706,9 +723,9 @@ namespace Flight_Interrupt
             Console.WriteLine("Delete Record");
             Console.WriteLine();
             Console.WriteLine("Enter the name of the volcano to delete from the database");
-            //DELETE FROM table_name WHERE condition;
             string volcanoName = Console.ReadLine();
 
+            //sql connection
             string connectionString = @"Data Source=\\strs/dfs/Devs/Data/17EDECHCo/! Github/Flight-Interruption-Simulator-due-to-Natural-Disasters/Flight Interrupt/VolcanoDatabase.sdf";
             SqlCeConnection connection = new SqlCeConnection(connectionString);
             connection.Open();
@@ -717,6 +734,8 @@ namespace Flight_Interrupt
             SqlCeDataReader dataReader;
             string sql = "delete from VolcanoDatabase where volcanoName = '" + volcanoName + "'";
             command = new SqlCeCommand(sql, connection);
+            
+            //execute sql
             try
             {
                 command.ExecuteNonQuery();
