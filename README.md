@@ -15,13 +15,4 @@ I am erupting volcanoes and seeing which flights would be interrupted
 
 ## Progress
 
-| Objective | Progress | Comment | Commit first introduced |
-|:---------:|:--------:|:--------|:-----------------------:|
-| 1         | ❌      | -       | N/A                     |
-| 2         | ❌      | -       | N/A                     |
-| 3         | ❌      | -       | N/A                     |
-| 4         | ❌      | -       | N/A                     |
-| 5         | ❌      | -       | N/A                     |
-| 6         | ❌      | -       | N/A                     |
-
----
+Complete ✔
